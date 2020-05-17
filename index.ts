@@ -5,6 +5,7 @@ import {
   purchaseHouse,
   purchaseHotel,
   canBuildHouse,
+  canBuildHotel,
   User,
 } from "./user";
 
@@ -28,6 +29,7 @@ const property3 = getPropertyBySlug(
 ) as Property;
 
 try {
+  console.clear();
   user = purchaseProperty(user, property);
   user = purchaseProperty(user, property2);
   user = purchaseProperty(user, property3);
@@ -45,6 +47,10 @@ try {
   user = purchaseHouse(user, property2, properties);
   user = purchaseHouse(user, property3, properties);
   // built 4 houses on each property
+
+  user = purchaseHotel(user, property, properties);
+  user = purchaseHotel(user, property2, properties);
+  user = purchaseHotel(user, property3, properties);
 
   console.log(user);
 } catch (error) {

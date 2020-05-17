@@ -71,6 +71,43 @@ export function ownsGroup(
   return true;
 }
 
+export function canBuildHotel(
+  user: User,
+  property: Property,
+  properties: Property[]
+): true | Error {
+  const userProperty = getUserPropertyByProperty(user, property);
+  if (userProperty instanceof Error) {
+    return userProperty;
+  }
+
+  const userCanAfford = canAfford(user, property.buildingCost, "house");
+  if (userCanAfford instanceof Error) {
+    return userCanAfford;
+  }
+
+  const userOwnsGroup = ownsGroup(user, userProperty, properties);
+  if (userOwnsGroup instanceof Error) {
+    return userOwnsGroup;
+  }
+
+  if (userProperty.hotel) {
+    return new Error("you've already purchased a hotel for this property");
+  }
+
+  if (
+    user.properties
+      .filter((p) => p.groupId === userProperty.groupId)
+      .every((p) => p.houses === 4 || p.hotel)
+  ) {
+    return true;
+  }
+
+  return new Error(
+    "you need to build 4 houses on each of the properties in the group before building a hotel"
+  );
+}
+
 export function canBuildHouse(
   user: User,
   property: Property,
@@ -104,7 +141,6 @@ export function canBuildHouse(
     case 1:
     case 2:
     case 3:
-      console.clear();
       const groupUserProperties = user.properties.filter(
         (p) => p.groupId === userProperty.groupId
       );
@@ -161,35 +197,32 @@ export function purchaseHouse(
   };
 }
 
-export function purchaseHotel(user: User, property: Property): User {
-  const userProperty = user.properties.find(
-    (userProperty) => userProperty.slug === property.slug
+export function purchaseHotel(
+  user: User,
+  property: Property,
+  properties: Property[]
+): User {
+  throwIfError(canBuildHotel, user, property, properties);
+
+  const userProperty = throwIfError<UserProperty>(
+    getUserPropertyByProperty,
+    user,
+    property
   );
-  if (!userProperty) {
-    throw new Error(`you don't own this property`);
-  }
-
-  if (userProperty.houses !== 4) {
-    throw new Error(`you must have 4 houses before purchasing a hotel`);
-  }
-
-  const userMoney = user.money - property.buildingCost;
-  if (userMoney < 0) {
-    throw new Error(`you can't afford to buy a house`);
-  }
 
   return {
     ...user,
-    properties: user.properties.map((userProperty) => {
-      if (userProperty.slug === property.slug) {
+    money: user.money - userProperty.buildingCost,
+    properties: user.properties.map((p) => {
+      if (p.slug === userProperty.slug) {
         return {
-          ...userProperty,
+          ...p,
           houses: 0,
           hotel: true,
         };
       }
 
-      return userProperty;
+      return p;
     }),
   };
 }

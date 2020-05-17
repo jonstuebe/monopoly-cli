@@ -4,6 +4,10 @@
   "main": "index.js",
   "author": "Jon Stuebe",
   "license": "MIT",
+  "scripts": {
+    "start": "ts-node index",
+    "dev": "ts-node-dev --respawn index"
+  },
   "dependencies": {
     "@reduxjs/toolkit": "^1.3.6",
     "chalk": "^4.0.0",
