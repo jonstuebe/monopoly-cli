@@ -9,6 +9,7 @@ import {
 
 import { User, Property, UserProperty } from "./types";
 
+// @todo needs-test
 export function canSellHouse(user: User, property: Property): true | Error {
   const userProperty = throwIfError<UserProperty>(
     getUserPropertyByProperty,
@@ -23,6 +24,7 @@ export function canSellHouse(user: User, property: Property): true | Error {
   return true;
 }
 
+// @todo needs-test
 export function canSellHotel(user: User, property: Property): true | Error {
   const userProperty = throwIfError<UserProperty>(
     getUserPropertyByProperty,
@@ -37,6 +39,7 @@ export function canSellHotel(user: User, property: Property): true | Error {
   return true;
 }
 
+// @todo needs-test
 export function canBuyHotel(
   user: User,
   property: Property,
@@ -68,6 +71,7 @@ export function canBuyHotel(
   );
 }
 
+// @todo needs-test
 export function canBuyHouse(
   user: User,
   property: Property,
@@ -123,6 +127,7 @@ export function canBuyHouse(
   }
 }
 
+// @todo needs-test
 export function buyHouse(
   user: User,
   property: Property,
@@ -151,6 +156,7 @@ export function buyHouse(
   };
 }
 
+// @todo needs-test
 export function sellHouse(user: User, property: Property): User {
   throwIfError(canSellHouse, user, property);
 
@@ -175,6 +181,7 @@ export function sellHouse(user: User, property: Property): User {
   };
 }
 
+// @todo needs-test
 export function buyHotel(
   user: User,
   property: Property,
@@ -204,6 +211,7 @@ export function buyHotel(
   };
 }
 
+// @todo needs-test
 export function sellHotel(user: User, property: Property): User {
   throwIfError(canSellHotel, user, property);
 

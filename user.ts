@@ -1,6 +1,6 @@
 import { getGroupPropertyCount } from "./properties";
 
-import { Property, User, UserProperty } from "./types";
+import { Property, User, UserProperty, Railroad, UserRailroad } from "./types";
 
 export const startingMoney = 1500;
 
@@ -22,6 +22,16 @@ export function getUserPropertyByProperty(
   const userProperty = user.properties.find((p) => p.slug === property.slug);
   if (!userProperty) return new Error("user does not own property");
   return userProperty;
+}
+
+// @todo needs-test
+export function getUserRailroadByRailroad(
+  user: User,
+  railroad: Railroad
+): UserRailroad | Error {
+  const userRailroad = user.railroads.find((p) => p.slug === railroad.slug);
+  if (!userRailroad) return new Error("user does not own railroad");
+  return userRailroad;
 }
 
 export class BankruptError extends Error {

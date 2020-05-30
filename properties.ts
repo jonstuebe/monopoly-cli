@@ -11,10 +11,20 @@ import { throwIfError } from "./utils";
 import { PropertyGroups, SpaceTypes } from "./enums";
 import { Property, UserProperty, User } from "./types";
 
-export function getPropertyBySlug(slug: string, properties: Property[]) {
-  return find(properties, { slug });
+// @todo needs-test
+export function getPropertyBySlug(
+  slug: string,
+  properties: Property[]
+): Property | Error {
+  const property = properties.find((p) => p.slug === slug);
+  if (property) {
+    return property;
+  }
+
+  return new Error("Property not found");
 }
 
+// @todo needs-test
 export function getPropertiesByGroupId(
   groupId: PropertyGroups,
   properties: Property[]
@@ -24,6 +34,7 @@ export function getPropertiesByGroupId(
   });
 }
 
+// @todo needs-test
 export function getGroupPropertyCount(
   groupId: string,
   properties: Property[]
@@ -31,6 +42,7 @@ export function getGroupPropertyCount(
   return properties.filter((p) => p.groupId === groupId).length;
 }
 
+// @todo needs-test
 export function createProperty(
   name: string,
   groupId: PropertyGroups,
@@ -53,6 +65,7 @@ export function createProperty(
   };
 }
 
+// @todo needs-test
 export function buyProperty(user: User, property: Property): User {
   throwIfError(canAfford, user, property.cost, "property");
 
@@ -65,6 +78,11 @@ export function buyProperty(user: User, property: Property): User {
   };
 }
 
+// @todo sell to another user
+// @todo needs-test
+// export function sellProperty(sellingUser: User, buyingUser: User): [User, User] {}
+
+// @todo needs-test
 export function unmortgageProperty(user: User, property: Property): User {
   throwIfError(canUnmortgageProperty, user, property);
 
@@ -84,10 +102,12 @@ export function unmortgageProperty(user: User, property: Property): User {
 }
 
 export const mortgageInterest = 0.1; // 10% interest
+// @todo needs-test
 export function calculateUnmortgage(property: Property): number {
   return property.mortgageValue * (1 + mortgageInterest);
 }
 
+// @todo needs-test
 export function canUnmortgageProperty(
   user: User,
   property: Property
@@ -106,6 +126,7 @@ export function canUnmortgageProperty(
   return true;
 }
 
+// @todo needs-test
 export function mortgageProperty(user: User, property: Property): User {
   throwIfError(canMortgageProperty, user, property);
 
@@ -124,6 +145,7 @@ export function mortgageProperty(user: User, property: Property): User {
   };
 }
 
+// @todo needs-test
 export function canMortgageProperty(
   user: User,
   property: Property
@@ -143,6 +165,7 @@ export function canMortgageProperty(
   return true;
 }
 
+// @todo needs-test
 export function ownsGroup(
   user: User,
   userProperty: UserProperty,

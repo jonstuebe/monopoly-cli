@@ -1,5 +1,4 @@
 import faker from "faker";
-// import { scenarios } from "./test-utils";
 import {
   canAfford,
   createUser,

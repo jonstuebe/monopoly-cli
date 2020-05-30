@@ -5,8 +5,8 @@ export interface User {
   readonly bot: boolean;
   readonly money: number;
   readonly properties: UserProperty[];
-  readonly railroads: Railroad[];
-  readonly utilities: Utility[];
+  readonly railroads: UserRailroad[];
+  readonly utilities: UserUtility[];
 }
 
 export interface UserProperty extends Property {
@@ -16,6 +16,9 @@ export interface UserProperty extends Property {
 }
 
 export interface Utility {}
+export interface UserUtility extends Utility {
+  readonly mortgaged: boolean;
+}
 
 export interface Property {
   readonly type: SpaceTypes;
@@ -37,4 +40,8 @@ export interface Railroad {
   readonly cost: number;
   readonly rentValues: [number, number, number, number];
   readonly mortgageValue: number;
+}
+
+export interface UserRailroad extends Railroad {
+  readonly mortgaged: boolean;
 }
