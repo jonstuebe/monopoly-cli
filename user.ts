@@ -22,17 +22,16 @@ export function createUser(name: string, bot = false): User {
   };
 }
 
-export function purchaseProperty(user: User, property: Property): User {
+export function buyProperty(user: User, property: Property): User {
   throwIfError(canAfford, user, property.cost, "property");
 
   return {
-    ...user,
-    money: user.money - property.cost,
+    ...spendMoney(user, property.cost),
     properties: [...user.properties, { ...property, houses: 0, hotel: false }],
   };
 }
 
-function getUserPropertyByProperty(
+export function getUserPropertyByProperty(
   user: User,
   property: Property
 ): UserProperty | Error {
@@ -71,28 +70,85 @@ export function ownsGroup(
   return true;
 }
 
-export function canBuildHotel(
+// values should be validated before running this function
+// to make sure the user has enough money (i.e. canAfford)
+export function spendMoney(user: User, amount: number): User {
+  return {
+    ...user,
+    money: user.money - amount,
+  };
+}
+
+export function addMoney(user: User, amount: number): User {
+  return {
+    ...user,
+    money: user.money + amount,
+  };
+}
+
+export function canMortgageProperty(
+  user: User,
+  property: Property
+): true | Error {
+  const userProperty = throwIfError<UserProperty>(
+    getUserPropertyByProperty,
+    user,
+    property
+  );
+
+  if (userProperty.houses > 0 || userProperty.hotel) {
+    return new Error(
+      "you must sell hotels & houses before mortgaging the property"
+    );
+  }
+
+  return true;
+}
+
+export function canSellHouse(user: User, property: Property): true | Error {
+  const userProperty = throwIfError<UserProperty>(
+    getUserPropertyByProperty,
+    user,
+    property
+  );
+
+  if (userProperty.houses === 0) {
+    return new Error("you don't have any houses built on this property");
+  }
+
+  return true;
+}
+
+export function canSellHotel(user: User, property: Property): true | Error {
+  const userProperty = throwIfError<UserProperty>(
+    getUserPropertyByProperty,
+    user,
+    property
+  );
+
+  if (!userProperty.hotel) {
+    return new Error("you don't have a hotel built on this property");
+  }
+
+  return true;
+}
+
+export function canBuyHotel(
   user: User,
   property: Property,
   properties: Property[]
 ): true | Error {
-  const userProperty = getUserPropertyByProperty(user, property);
-  if (userProperty instanceof Error) {
-    return userProperty;
-  }
+  const userProperty = throwIfError<UserProperty>(
+    getUserPropertyByProperty,
+    user,
+    property
+  );
 
-  const userCanAfford = canAfford(user, property.buildingCost, "house");
-  if (userCanAfford instanceof Error) {
-    return userCanAfford;
-  }
-
-  const userOwnsGroup = ownsGroup(user, userProperty, properties);
-  if (userOwnsGroup instanceof Error) {
-    return userOwnsGroup;
-  }
+  throwIfError(canAfford, user, property.buildingCost, "hotel");
+  throwIfError(ownsGroup, user, userProperty, properties);
 
   if (userProperty.hotel) {
-    return new Error("you've already purchased a hotel for this property");
+    return new Error("you've already buyd a hotel for this property");
   }
 
   if (
@@ -108,31 +164,26 @@ export function canBuildHotel(
   );
 }
 
-export function canBuildHouse(
+export function canBuyHouse(
   user: User,
   property: Property,
   properties: Property[]
 ): true | Error {
-  const userProperty = getUserPropertyByProperty(user, property);
-  if (userProperty instanceof Error) {
-    return userProperty;
-  }
+  const userProperty = throwIfError<UserProperty>(
+    getUserPropertyByProperty,
+    user,
+    property
+  );
 
-  const userCanAfford = canAfford(user, property.buildingCost, "house");
-  if (userCanAfford instanceof Error) {
-    return userCanAfford;
-  }
+  throwIfError(canAfford, user, property.buildingCost, "house");
 
   const numHouses = userProperty.houses;
 
   if (numHouses === 4) {
-    return new Error("you already have 4 houses on this property");
+    return new Error("Maximum number of houses have been built");
   }
 
-  const userOwnsGroup = ownsGroup(user, userProperty, properties);
-  if (userOwnsGroup instanceof Error) {
-    return userOwnsGroup;
-  }
+  throwIfError(ownsGroup, user, userProperty, properties);
 
   switch (numHouses) {
     case 0:
@@ -160,7 +211,7 @@ export function canBuildHouse(
 
           return new Error("houses must be built equally");
         default:
-          throw new Error("incorrect property house count");
+          return new Error("incorrect property house count");
       }
 
     default:
@@ -168,12 +219,58 @@ export function canBuildHouse(
   }
 }
 
-export function purchaseHouse(
+// export function isBuildAllowed(
+//   user: User,
+//   userProperty: UserProperty,
+//   properties: Property[],
+//   add: boolean,
+//   buildType: "house" | "hotel"
+// ): true | Error {
+//   const groupUserProperties = user.properties.filter(
+//     (p) => p.groupId === userProperty.groupId
+//   );
+
+//   switch (buildType) {
+//     case "house":
+//       if (add === true && userProperty.houses === 4) {
+//         return new Error("Maximum number of houses have been built");
+//       }
+
+//       const numHouses = add ? userProperty.houses + 1 : userProperty.houses - 1;
+
+//       switch (groupUserProperties.length) {
+//         case 2:
+//         case 3:
+//           console.log({ groupUserProperties });
+
+//           if (groupUserProperties.every((p) => numHouses - p.houses <= 1)) {
+//             return true;
+//           }
+
+//           return new Error("houses must be built equally");
+//         default:
+//           return new Error("incorrect property house count");
+//       }
+//     case "hotel":
+//       if (add === true && !groupUserProperties.every((p) => p.houses === 4)) {
+//         return new Error(
+//           "You must build 4 houses on each property of the group before building hotels"
+//         );
+//       }
+
+//       return true;
+
+//     default:
+//       return new Error("incorrect build type");
+//   }
+// }
+
+export function buyHouse(
   user: User,
   property: Property,
   properties: Property[]
 ): User {
-  throwIfError(canBuildHouse, user, property, properties);
+  throwIfError(canBuyHouse, user, property, properties);
 
   const userProperty = throwIfError<UserProperty>(
     getUserPropertyByProperty,
@@ -182,8 +279,7 @@ export function purchaseHouse(
   );
 
   return {
-    ...user,
-    money: user.money - userProperty.buildingCost,
+    ...spendMoney(user, userProperty.buildingCost),
     properties: user.properties.map((p) => {
       if (p.slug === userProperty.slug) {
         return {
@@ -197,12 +293,8 @@ export function purchaseHouse(
   };
 }
 
-export function purchaseHotel(
-  user: User,
-  property: Property,
-  properties: Property[]
-): User {
-  throwIfError(canBuildHotel, user, property, properties);
+export function sellHouse(user: User, property: Property): User {
+  throwIfError(canSellHouse, user, property);
 
   const userProperty = throwIfError<UserProperty>(
     getUserPropertyByProperty,
@@ -211,8 +303,35 @@ export function purchaseHotel(
   );
 
   return {
-    ...user,
-    money: user.money - userProperty.buildingCost,
+    ...addMoney(user, userProperty.buildingCost / 2),
+    properties: user.properties.map((p) => {
+      if (p.slug === userProperty.slug) {
+        return {
+          ...p,
+          houses: p.houses - 1,
+        };
+      }
+
+      return p;
+    }),
+  };
+}
+
+export function buyHotel(
+  user: User,
+  property: Property,
+  properties: Property[]
+): User {
+  throwIfError(canBuyHotel, user, property, properties);
+
+  const userProperty = throwIfError<UserProperty>(
+    getUserPropertyByProperty,
+    user,
+    property
+  );
+
+  return {
+    ...spendMoney(user, userProperty.buildingCost),
     properties: user.properties.map((p) => {
       if (p.slug === userProperty.slug) {
         return {
@@ -227,12 +346,27 @@ export function purchaseHotel(
   };
 }
 
-// export const user: User = {
-//   name: "Jon",
-//   bot: false,
-//   spaces: [
-//     { slug: "mediterranean_avenue", houses: 0, hotel: false },
-//     { slug: "baltic_avenue", houses: 0, hotel: false },
-//     { slug: "short_line" },
-//   ],
-// };
+export function sellHotel(user: User, property: Property): User {
+  throwIfError(canSellHotel, user, property);
+
+  const userProperty = throwIfError<UserProperty>(
+    getUserPropertyByProperty,
+    user,
+    property
+  );
+
+  return {
+    ...addMoney(user, userProperty.buildingCost / 2),
+    properties: user.properties.map((p) => {
+      if (p.slug === userProperty.slug) {
+        return {
+          ...p,
+          houses: 4,
+          hotel: false,
+        };
+      }
+
+      return p;
+    }),
+  };
+}

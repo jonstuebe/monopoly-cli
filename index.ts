@@ -1,17 +1,17 @@
 import { getPropertyBySlug, properties, Property } from "./properties";
 import {
   createUser,
-  purchaseProperty,
-  purchaseHouse,
-  purchaseHotel,
-  canBuildHouse,
-  canBuildHotel,
+  buyProperty,
+  buyHouse,
+  buyHotel,
+  sellHouse,
+  sellHotel,
+  isBuildAllowed,
+  getUserPropertyByProperty,
   User,
+  UserProperty,
 } from "./user";
-
-let numPlayers = 2;
-let startingMoney = 1500;
-let usersMoney = new Array(numPlayers).fill(startingMoney);
+import { throwIfError } from "./utils";
 
 let user = createUser("Jon");
 
@@ -30,29 +30,31 @@ const property3 = getPropertyBySlug(
 
 try {
   console.clear();
-  user = purchaseProperty(user, property);
-  user = purchaseProperty(user, property2);
-  user = purchaseProperty(user, property3);
+  user = buyProperty(user, property);
+  user = buyProperty(user, property2);
+  user = buyProperty(user, property3);
 
-  user = purchaseHouse(user, property, properties);
-  user = purchaseHouse(user, property2, properties);
-  user = purchaseHouse(user, property3, properties);
-  user = purchaseHouse(user, property, properties);
-  user = purchaseHouse(user, property2, properties);
-  user = purchaseHouse(user, property3, properties);
-  user = purchaseHouse(user, property, properties);
-  user = purchaseHouse(user, property2, properties);
-  user = purchaseHouse(user, property3, properties);
-  user = purchaseHouse(user, property, properties);
-  user = purchaseHouse(user, property2, properties);
-  user = purchaseHouse(user, property3, properties);
+  user = buyHouse(user, property, properties);
+  user = buyHouse(user, property2, properties);
+  user = buyHouse(user, property3, properties);
+  user = buyHouse(user, property, properties);
+  user = buyHouse(user, property2, properties);
+  user = buyHouse(user, property3, properties);
+  user = buyHouse(user, property, properties);
+  user = buyHouse(user, property2, properties);
+  user = buyHouse(user, property3, properties);
+  user = buyHouse(user, property, properties);
+  user = buyHouse(user, property2, properties);
+  user = buyHouse(user, property3, properties);
   // built 4 houses on each property
 
-  user = purchaseHotel(user, property, properties);
-  user = purchaseHotel(user, property2, properties);
-  user = purchaseHotel(user, property3, properties);
+  user = buyHotel(user, property, properties);
+  user = buyHotel(user, property2, properties);
+  user = buyHotel(user, property3, properties);
 
-  console.log(user);
+  user = sellHotel(user, property3);
+
+  console.log(user.properties);
 } catch (error) {
   console.error("Error: ", error.message);
 }
