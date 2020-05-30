@@ -2,11 +2,13 @@ import { getGroupPropertyCount } from "./properties";
 
 import { Property, User, UserProperty } from "./types";
 
+export const startingMoney = 1500;
+
 export function createUser(name: string, bot = false): User {
   return {
     name,
     bot,
-    money: 1500,
+    money: startingMoney,
     properties: [],
     railroads: [],
     utilities: [],
@@ -18,7 +20,7 @@ export function getUserPropertyByProperty(
   property: Property
 ): UserProperty | Error {
   const userProperty = user.properties.find((p) => p.slug === property.slug);
-  if (!userProperty) return new Error("user not found");
+  if (!userProperty) return new Error("user does not own property");
   return userProperty;
 }
 
@@ -47,7 +49,7 @@ export function canAfford(
     case "unmortgage":
       return new Error("you can't afford to unmortgage this property");
     case "rent":
-      return new BankruptError("you can't afford this rent.");
+      return new BankruptError("you can't afford this rent");
     default:
       return new Error(`you can't afford to buy this ${type}`);
   }
