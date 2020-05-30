@@ -1,7 +1,10 @@
 import { find, snakeCase } from "lodash";
 
+import { canAfford, spendMoney } from "./user";
+import { throwIfError } from "./utils";
+
 import { SpaceTypes } from "./enums";
-import { Railroad } from "./types";
+import { Railroad, User } from "./types";
 
 export function getRailroadBySlug(slug: string, railroad: Railroad[]) {
   return find(railroad, { slug });
@@ -16,6 +19,15 @@ export function createRailroad(name: string, order: number): Railroad {
     cost: 200,
     rentValues: [25, 50, 100, 200],
     mortgageValue: 100,
+  };
+}
+
+export function buyRailroad(user: User, railroad: Railroad): User {
+  throwIfError(canAfford, user, railroad.cost, "railroad");
+
+  return {
+    ...spendMoney(user, railroad.cost),
+    railroads: [...user.railroads, railroad],
   };
 }
 

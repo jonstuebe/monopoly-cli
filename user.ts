@@ -1,5 +1,4 @@
 import { getGroupPropertyCount } from "./properties";
-import { throwIfError } from "./utils";
 
 import { Property, User, UserProperty } from "./types";
 
@@ -9,6 +8,8 @@ export function createUser(name: string, bot = false): User {
     bot,
     money: 1500,
     properties: [],
+    railroads: [],
+    utilities: [],
   };
 }
 
@@ -21,12 +22,20 @@ export function getUserPropertyByProperty(
   return userProperty;
 }
 
+export class BankruptError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "BankruptError";
+  }
+}
+
 export function canAfford(
   user: User,
   amount: number,
-  type: "property" | "house" | "hotel" | "railroad" | "utility"
+  type: "property" | "house" | "hotel" | "railroad" | "utility" | "rent"
 ): true | Error {
   if (user.money - amount >= 0) return true;
+  if (type === "rent") return new BankruptError("you can't afford this rent.");
   return new Error(`you can't afford to buy this ${type}`);
 }
 

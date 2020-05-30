@@ -4,7 +4,7 @@ import { createUser, getUserPropertyByProperty } from "./user";
 import { buyHouse, buyHotel, sellHouse, sellHotel } from "./building";
 import { throwIfError } from "./utils";
 
-import { User, UserProperty, Property } from "./types";
+import { Property } from "./types";
 
 let user = createUser("Jon");
 

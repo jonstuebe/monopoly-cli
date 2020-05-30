@@ -1,6 +1,11 @@
 import { find, snakeCase } from "lodash";
 
-import { canAfford, spendMoney, getUserPropertyByProperty } from "./user";
+import {
+  canAfford,
+  earnedMoney,
+  spendMoney,
+  getUserPropertyByProperty,
+} from "./user";
 import { throwIfError } from "./utils";
 
 import { PropertyGroups, SpaceTypes } from "./enums";
@@ -53,7 +58,28 @@ export function buyProperty(user: User, property: Property): User {
 
   return {
     ...spendMoney(user, property.cost),
-    properties: [...user.properties, { ...property, houses: 0, hotel: false }],
+    properties: [
+      ...user.properties,
+      { ...property, houses: 0, hotel: false, mortgaged: false },
+    ],
+  };
+}
+
+export function mortgageProperty(user: User, property: Property): User {
+  throwIfError(canMortgageProperty, user, property);
+
+  return {
+    ...earnedMoney(user, property.mortgageValue),
+    properties: user.properties.map((p) => {
+      if (p.slug === property.slug) {
+        return {
+          ...p,
+          mortgaged: true,
+        };
+      }
+
+      return p;
+    }),
   };
 }
 
@@ -67,7 +93,7 @@ export function canMortgageProperty(
     property
   );
 
-  if (userProperty.houses > 0 || userProperty.hotel) {
+  if (userProperty.houses > 0 || userProperty.hotel === true) {
     return new Error(
       "you must sell hotels & houses before mortgaging the property"
     );
