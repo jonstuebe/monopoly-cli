@@ -65,6 +65,47 @@ export function buyProperty(user: User, property: Property): User {
   };
 }
 
+export function unmortgageProperty(user: User, property: Property): User {
+  throwIfError(canUnmortgageProperty, user, property);
+
+  return {
+    ...spendMoney(user, calculateUnmortgage(property)),
+    properties: user.properties.map((p) => {
+      if (p.slug === property.slug) {
+        return {
+          ...p,
+          mortgaged: false,
+        };
+      }
+
+      return p;
+    }),
+  };
+}
+
+export const mortgageInterest = 0.1; // 10% interest
+export function calculateUnmortgage(property: Property): number {
+  return property.mortgageValue * (1 + mortgageInterest);
+}
+
+export function canUnmortgageProperty(
+  user: User,
+  property: Property
+): true | Error {
+  const userProperty = throwIfError<UserProperty>(
+    getUserPropertyByProperty,
+    user,
+    property
+  );
+
+  if (userProperty.mortgaged === false)
+    return new Error("Property is not mortgaged");
+
+  throwIfError(canAfford, user, calculateUnmortgage(property), "unmortgage");
+
+  return true;
+}
+
 export function mortgageProperty(user: User, property: Property): User {
   throwIfError(canMortgageProperty, user, property);
 

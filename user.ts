@@ -32,11 +32,25 @@ export class BankruptError extends Error {
 export function canAfford(
   user: User,
   amount: number,
-  type: "property" | "house" | "hotel" | "railroad" | "utility" | "rent"
+  type:
+    | "property"
+    | "house"
+    | "hotel"
+    | "railroad"
+    | "utility"
+    | "rent"
+    | "unmortgage"
 ): true | Error {
   if (user.money - amount >= 0) return true;
-  if (type === "rent") return new BankruptError("you can't afford this rent.");
-  return new Error(`you can't afford to buy this ${type}`);
+
+  switch (type) {
+    case "unmortgage":
+      return new Error("you can't afford to unmortgage this property");
+    case "rent":
+      return new BankruptError("you can't afford this rent.");
+    default:
+      return new Error(`you can't afford to buy this ${type}`);
+  }
 }
 
 export function ownsGroup(
