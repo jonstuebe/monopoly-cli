@@ -1,18 +1,10 @@
 import { find, snakeCase } from "lodash";
 
-import { PropertyGroups, SpaceTypes } from "./enums";
+import { canAfford, spendMoney, getUserPropertyByProperty } from "./user";
+import { throwIfError } from "./utils";
 
-export interface Property {
-  type: SpaceTypes;
-  name: string;
-  slug: string;
-  groupId: PropertyGroups;
-  groupOrder: 0 | 1 | 2;
-  cost: number;
-  rentValues: [number, number, number, number, number, number];
-  buildingCost: number;
-  mortgageValue: number;
-}
+import { PropertyGroups, SpaceTypes } from "./enums";
+import { Property, UserProperty, User } from "./types";
 
 export function getPropertyBySlug(slug: string, properties: Property[]) {
   return find(properties, { slug });
@@ -54,6 +46,55 @@ export function createProperty(
     buildingCost,
     mortgageValue,
   };
+}
+
+export function buyProperty(user: User, property: Property): User {
+  throwIfError(canAfford, user, property.cost, "property");
+
+  return {
+    ...spendMoney(user, property.cost),
+    properties: [...user.properties, { ...property, houses: 0, hotel: false }],
+  };
+}
+
+export function canMortgageProperty(
+  user: User,
+  property: Property
+): true | Error {
+  const userProperty = throwIfError<UserProperty>(
+    getUserPropertyByProperty,
+    user,
+    property
+  );
+
+  if (userProperty.houses > 0 || userProperty.hotel) {
+    return new Error(
+      "you must sell hotels & houses before mortgaging the property"
+    );
+  }
+
+  return true;
+}
+
+export function ownsGroup(
+  user: User,
+  userProperty: UserProperty,
+  properties: Property[]
+): true | Error {
+  const groupUserProperties = user.properties.filter(
+    (p) => p.groupId === userProperty.groupId
+  );
+  const groupPropertyCount = getGroupPropertyCount(
+    userProperty.groupId,
+    properties
+  );
+
+  if (groupUserProperties.length !== groupPropertyCount) {
+    // can't build because the user doesn't own all of the properties for this group
+    return new Error("you don't own all of the properties for this group yet");
+  }
+
+  return true;
 }
 
 export const properties: Property[] = [

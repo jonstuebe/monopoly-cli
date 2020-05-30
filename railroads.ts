@@ -1,16 +1,7 @@
 import { find, snakeCase } from "lodash";
 
 import { SpaceTypes } from "./enums";
-
-export interface Railroad {
-  name: string;
-  type: SpaceTypes;
-  slug: string;
-  order: number;
-  cost: number;
-  rentValues: [number, number, number, number];
-  mortgageValue: number;
-}
+import { Railroad } from "./types";
 
 export function getRailroadBySlug(slug: string, railroad: Railroad[]) {
   return find(railroad, { slug });
