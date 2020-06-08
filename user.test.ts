@@ -9,6 +9,7 @@ import {
   getUserRailroadByRailroad,
   BankruptError,
   ownsGroup,
+  ownsProperty,
 } from "./user";
 import { properties, buyProperty } from "./properties";
 import { buyRailroad, railroads } from "./railroads";
@@ -168,5 +169,23 @@ describe("canAfford", () => {
     expect(canAfford(user, 1200, "property")).toEqual(
       new Error("you can't afford to buy this property")
     );
+  });
+});
+
+describe("ownsProperty", () => {
+  it("returns an error", () => {
+    let user = createUser("James");
+    const property = properties[0];
+    expect(ownsProperty(user, property)).toEqual(
+      new Error("user does not own property")
+    );
+  });
+  it("returns true", () => {
+    let user = createUser("James");
+    const property = properties[0];
+
+    user = buyProperty(user, property);
+
+    expect(ownsProperty(user, property)).toBeTruthy();
   });
 });

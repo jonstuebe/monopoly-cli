@@ -1,5 +1,3 @@
-import { isNumber, isArray } from "lodash";
-
 export function addArray(arr: number[], initial = 0): number {
   return arr.reduce((a, b) => a + b, initial);
 }

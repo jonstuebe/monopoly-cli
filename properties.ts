@@ -5,13 +5,13 @@ import {
   earnedMoney,
   spendMoney,
   getUserPropertyByProperty,
+  ownsProperty,
 } from "./user";
 import { throwIfError } from "./utils";
 
 import { PropertyGroups, SpaceTypes } from "./enums";
-import { Property, UserProperty, User } from "./types";
+import { SpaceId, Property, UserProperty, User } from "./types";
 
-// @todo needs-test
 export function getPropertyBySlug(
   slug: string,
   properties: Property[]
@@ -24,36 +24,41 @@ export function getPropertyBySlug(
   return new Error("Property not found");
 }
 
-// @todo needs-test
-export function getPropertiesByGroupId(
-  groupId: PropertyGroups,
-  properties: Property[]
-) {
-  return properties.filter((property) => {
-    return property.groupId === groupId;
-  });
-}
-
-// @todo needs-test
 export function getGroupPropertyCount(
   groupId: string,
   properties: Property[]
-): number {
-  return properties.filter((p) => p.groupId === groupId).length;
+): Error | number {
+  const groupProperties = properties.filter((p) => p.groupId === groupId);
+
+  if (groupProperties.length === 0) {
+    return new Error("Group not found");
+  }
+
+  return groupProperties.length;
 }
 
-// @todo needs-test
-export function createProperty(
-  name: string,
-  groupId: PropertyGroups,
-  groupOrder: 0 | 1 | 2,
-  cost: number,
-  rentValues: [number, number, number, number, number, number],
-  buildingCost: number,
-  mortgageValue: number
-): Property {
+export function createProperty({
+  name,
+  spaceId,
+  groupId,
+  groupOrder,
+  cost,
+  rentValues,
+  buildingCost,
+  mortgageValue,
+}: {
+  name: string;
+  spaceId: SpaceId;
+  groupId: PropertyGroups;
+  groupOrder: 0 | 1 | 2;
+  cost: number;
+  rentValues: [number, number, number, number, number, number];
+  buildingCost: number;
+  mortgageValue: number;
+}): Property {
   return {
     type: SpaceTypes.PROPERTY,
+    spaceId,
     slug: snakeCase(name),
     name,
     cost,
@@ -65,8 +70,11 @@ export function createProperty(
   };
 }
 
-// @todo needs-test
 export function buyProperty(user: User, property: Property): User {
+  if (ownsProperty(user, property) === true) {
+    throw new Error("user already owns property");
+  }
+
   throwIfError(canAfford, user, property.cost, "property");
 
   return {
@@ -82,7 +90,6 @@ export function buyProperty(user: User, property: Property): User {
 // @todo needs-test
 // export function sellProperty(sellingUser: User, buyingUser: User): [User, User] {}
 
-// @todo needs-test
 export function unmortgageProperty(user: User, property: Property): User {
   throwIfError(canUnmortgageProperty, user, property);
 
@@ -165,231 +172,232 @@ export function canMortgageProperty(
   return true;
 }
 
-// @todo needs-test
-export function ownsGroup(
-  user: User,
-  userProperty: UserProperty,
-  properties: Property[]
-): true | Error {
-  const groupUserProperties = user.properties.filter(
-    (p) => p.groupId === userProperty.groupId
-  );
-  const groupPropertyCount = getGroupPropertyCount(
-    userProperty.groupId,
-    properties
-  );
-
-  if (groupUserProperties.length !== groupPropertyCount) {
-    // can't build because the user doesn't own all of the properties for this group
-    return new Error("you don't own all of the properties for this group yet");
-  }
-
-  return true;
-}
-
 export const properties: Property[] = [
-  createProperty(
-    "Mediterranean Avenue",
-    PropertyGroups.BROWN,
-    0,
-    60,
-    [2, 10, 30, 90, 160, 250],
-    50,
-    30
-  ),
-  createProperty(
-    "Baltic Avenue",
-    PropertyGroups.BROWN,
-    1,
-    60,
-    [4, 20, 60, 180, 320, 450],
-    50,
-    30
-  ),
-  createProperty(
-    "Oriental Avenue",
-    PropertyGroups.LIGHT_BLUE,
-    0,
-    100,
-    [6, 30, 90, 270, 400, 550],
-    50,
-    50
-  ),
-  createProperty(
-    "Vermont Avenue",
-    PropertyGroups.LIGHT_BLUE,
-    1,
-    100,
-    [6, 30, 90, 270, 400, 550],
-    50,
-    50
-  ),
-  createProperty(
-    "Connecticut Avenue",
-    PropertyGroups.LIGHT_BLUE,
-    2,
-    120,
-    [8, 40, 100, 300, 450, 600],
-    50,
-    60
-  ),
+  createProperty({
+    name: "Mediterranean Avenue",
+    spaceId: 1,
+    groupId: PropertyGroups.BROWN,
+    groupOrder: 0,
+    cost: 60,
+    rentValues: [2, 10, 30, 90, 160, 250],
+    buildingCost: 50,
+    mortgageValue: 30,
+  }),
+  createProperty({
+    name: "Baltic Avenue",
+    spaceId: 3,
+    groupId: PropertyGroups.BROWN,
+    groupOrder: 1,
+    cost: 60,
+    rentValues: [4, 20, 60, 180, 320, 450],
+    buildingCost: 50,
+    mortgageValue: 30,
+  }),
+  createProperty({
+    name: "Oriental Avenue",
+    spaceId: 6,
+    groupId: PropertyGroups.LIGHT_BLUE,
+    groupOrder: 0,
+    cost: 100,
+    rentValues: [6, 30, 90, 270, 400, 550],
+    buildingCost: 50,
+    mortgageValue: 50,
+  }),
+  createProperty({
+    name: "Vermont Avenue",
+    spaceId: 8,
 
-  createProperty(
-    "St. Charles Place",
-    PropertyGroups.PINK,
-    0,
-    140,
-    [10, 50, 150, 450, 625, 750],
-    100,
-    70
-  ),
-  createProperty(
-    "States Avenue",
-    PropertyGroups.PINK,
-    1,
-    140,
-    [10, 50, 150, 450, 625, 750],
-    100,
-    70
-  ),
-  createProperty(
-    "Virginia Avenue",
-    PropertyGroups.PINK,
-    2,
-    160,
-    [12, 60, 180, 500, 700, 900],
-    100,
-    80
-  ),
+    groupId: PropertyGroups.LIGHT_BLUE,
+    groupOrder: 1,
+    cost: 100,
+    rentValues: [6, 30, 90, 270, 400, 550],
+    buildingCost: 50,
+    mortgageValue: 50,
+  }),
+  createProperty({
+    name: "Connecticut Avenue",
+    spaceId: 9,
+    groupId: PropertyGroups.LIGHT_BLUE,
+    groupOrder: 2,
+    cost: 120,
+    rentValues: [8, 40, 100, 300, 450, 600],
+    buildingCost: 50,
+    mortgageValue: 60,
+  }),
 
-  createProperty(
-    "St. James Place",
-    PropertyGroups.ORANGE,
-    0,
-    180,
-    [15, 70, 200, 550, 750, 950],
-    100,
-    90
-  ),
-  createProperty(
-    "Tennessee Avenue",
-    PropertyGroups.ORANGE,
-    1,
-    180,
-    [14, 70, 200, 550, 750, 950],
-    100,
-    90
-  ),
-  createProperty(
-    "New York Avenue",
-    PropertyGroups.ORANGE,
-    2,
-    200,
-    [16, 80, 220, 600, 800, 1000],
-    100,
-    100
-  ),
+  createProperty({
+    name: "St. Charles Place",
+    spaceId: 11,
+    groupId: PropertyGroups.PINK,
+    groupOrder: 0,
+    cost: 140,
+    rentValues: [10, 50, 150, 450, 625, 750],
+    buildingCost: 100,
+    mortgageValue: 70,
+  }),
+  createProperty({
+    name: "States Avenue",
+    spaceId: 13,
+    groupId: PropertyGroups.PINK,
+    groupOrder: 1,
+    cost: 140,
+    rentValues: [10, 50, 150, 450, 625, 750],
+    buildingCost: 100,
+    mortgageValue: 70,
+  }),
+  createProperty({
+    name: "Virginia Avenue",
+    spaceId: 14,
+    groupId: PropertyGroups.PINK,
+    groupOrder: 2,
+    cost: 160,
+    rentValues: [12, 60, 180, 500, 700, 900],
+    buildingCost: 100,
+    mortgageValue: 80,
+  }),
 
-  createProperty(
-    "Kentucky Avenue",
-    PropertyGroups.RED,
-    0,
-    220,
-    [18, 90, 250, 700, 875, 1050],
-    150,
-    110
-  ),
-  createProperty(
-    "Indiana Avenue",
-    PropertyGroups.RED,
-    1,
-    220,
-    [18, 90, 250, 700, 875, 1050],
-    150,
-    110
-  ),
-  createProperty(
-    "Illinois Avenue",
-    PropertyGroups.RED,
-    2,
-    240,
-    [20, 100, 300, 750, 925, 1100],
-    150,
-    120
-  ),
+  createProperty({
+    name: "St. James Place",
+    spaceId: 16,
+    groupId: PropertyGroups.ORANGE,
+    groupOrder: 0,
+    cost: 180,
+    rentValues: [15, 70, 200, 550, 750, 950],
+    buildingCost: 100,
+    mortgageValue: 90,
+  }),
+  createProperty({
+    name: "Tennessee Avenue",
+    spaceId: 18,
+    groupId: PropertyGroups.ORANGE,
+    groupOrder: 1,
+    cost: 180,
+    rentValues: [14, 70, 200, 550, 750, 950],
+    buildingCost: 100,
+    mortgageValue: 90,
+  }),
+  createProperty({
+    name: "New York Avenue",
+    spaceId: 19,
+    groupId: PropertyGroups.ORANGE,
+    groupOrder: 2,
+    cost: 200,
+    rentValues: [16, 80, 220, 600, 800, 1000],
+    buildingCost: 100,
+    mortgageValue: 100,
+  }),
 
-  createProperty(
-    "Atlantic Avenue",
-    PropertyGroups.YELLOW,
-    0,
-    260,
-    [22, 110, 330, 800, 975, 1150],
-    150,
-    130
-  ),
-  createProperty(
-    "Ventnor Avenue",
-    PropertyGroups.YELLOW,
-    1,
-    260,
-    [22, 110, 330, 800, 975, 1150],
-    150,
-    130
-  ),
-  createProperty(
-    "Marvin Gardens",
-    PropertyGroups.YELLOW,
-    2,
-    280,
-    [24, 120, 360, 850, 1025, 1200],
-    150,
-    140
-  ),
+  createProperty({
+    name: "Kentucky Avenue",
+    spaceId: 21,
+    groupId: PropertyGroups.RED,
+    groupOrder: 0,
+    cost: 220,
+    rentValues: [18, 90, 250, 700, 875, 1050],
+    buildingCost: 150,
+    mortgageValue: 110,
+  }),
+  createProperty({
+    name: "Indiana Avenue",
+    spaceId: 23,
+    groupId: PropertyGroups.RED,
+    groupOrder: 1,
+    cost: 220,
+    rentValues: [18, 90, 250, 700, 875, 1050],
+    buildingCost: 150,
+    mortgageValue: 110,
+  }),
+  createProperty({
+    name: "Illinois Avenue",
+    spaceId: 24,
+    groupId: PropertyGroups.RED,
+    groupOrder: 2,
+    cost: 240,
+    rentValues: [20, 100, 300, 750, 925, 1100],
+    buildingCost: 150,
+    mortgageValue: 120,
+  }),
 
-  createProperty(
-    "Pacific Avenue",
-    PropertyGroups.GREEN,
-    0,
-    300,
-    [26, 130, 390, 900, 1100, 1275],
-    200,
-    150
-  ),
-  createProperty(
-    "North Carolina Avenue",
-    PropertyGroups.GREEN,
-    1,
-    300,
-    [26, 130, 390, 900, 1100, 1275],
-    200,
-    150
-  ),
-  createProperty(
-    "Pennsylvania Avenue",
-    PropertyGroups.GREEN,
-    2,
-    320,
-    [28, 150, 450, 1000, 1200, 1400],
-    200,
-    160
-  ),
+  createProperty({
+    name: "Atlantic Avenue",
+    spaceId: 26,
+    groupId: PropertyGroups.YELLOW,
+    groupOrder: 0,
+    cost: 260,
+    rentValues: [22, 110, 330, 800, 975, 1150],
+    buildingCost: 150,
+    mortgageValue: 130,
+  }),
+  createProperty({
+    name: "Ventnor Avenue",
+    spaceId: 27,
+    groupId: PropertyGroups.YELLOW,
+    groupOrder: 1,
+    cost: 260,
+    rentValues: [22, 110, 330, 800, 975, 1150],
+    buildingCost: 150,
+    mortgageValue: 130,
+  }),
+  createProperty({
+    name: "Marvin Gardens",
+    spaceId: 29,
+    groupId: PropertyGroups.YELLOW,
+    groupOrder: 2,
+    cost: 280,
+    rentValues: [24, 120, 360, 850, 1025, 1200],
+    buildingCost: 150,
+    mortgageValue: 140,
+  }),
 
-  createProperty(
-    "Park Place",
-    PropertyGroups.DARK_BLUE,
-    0,
-    350,
-    [35, 175, 500, 1100, 1300, 1500],
-    200,
-    175
-  ),
-  createProperty(
-    "Boardwalk",
-    PropertyGroups.DARK_BLUE,
-    1,
-    400,
-    [50, 200, 600, 1400, 1700, 2000],
-    200,
-    200
-  ),
+  createProperty({
+    name: "Pacific Avenue",
+    spaceId: 31,
+    groupId: PropertyGroups.GREEN,
+    groupOrder: 0,
+    cost: 300,
+    rentValues: [26, 130, 390, 900, 1100, 1275],
+    buildingCost: 200,
+    mortgageValue: 150,
+  }),
+  createProperty({
+    name: "North Carolina Avenue",
+    spaceId: 32,
+    groupId: PropertyGroups.GREEN,
+    groupOrder: 1,
+    cost: 300,
+    rentValues: [26, 130, 390, 900, 1100, 1275],
+    buildingCost: 200,
+    mortgageValue: 150,
+  }),
+  createProperty({
+    name: "Pennsylvania Avenue",
+    spaceId: 34,
+    groupId: PropertyGroups.GREEN,
+    groupOrder: 2,
+    cost: 320,
+    rentValues: [28, 150, 450, 1000, 1200, 1400],
+    buildingCost: 200,
+    mortgageValue: 160,
+  }),
+
+  createProperty({
+    name: "Park Place",
+    spaceId: 37,
+    groupId: PropertyGroups.DARK_BLUE,
+    groupOrder: 0,
+    cost: 350,
+    rentValues: [35, 175, 500, 1100, 1300, 1500],
+    buildingCost: 200,
+    mortgageValue: 175,
+  }),
+  createProperty({
+    name: "Boardwalk",
+    spaceId: 39,
+    groupId: PropertyGroups.DARK_BLUE,
+    groupOrder: 1,
+    cost: 400,
+    rentValues: [50, 200, 600, 1400, 1700, 2000],
+    buildingCost: 200,
+    mortgageValue: 200,
+  }),
 ];

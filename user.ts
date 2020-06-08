@@ -24,6 +24,15 @@ export function getUserPropertyByProperty(
   return userProperty;
 }
 
+export function ownsProperty(user: User, property: Property): true | Error {
+  const userProperty = getUserPropertyByProperty(user, property);
+  if (userProperty instanceof Error) {
+    return userProperty;
+  }
+
+  return true;
+}
+
 export function getUserRailroadByRailroad(
   user: User,
   railroad: Railroad
