@@ -6,7 +6,9 @@
   "license": "MIT",
   "scripts": {
     "start": "ts-node index",
-    "dev": "ts-node-dev --respawn index"
+    "dev": "ts-node-dev --respawn index",
+    "test": "jest",
+    "test:watch": "jest --watch"
   },
   "dependencies": {
     "chalk": "^4.0.0",

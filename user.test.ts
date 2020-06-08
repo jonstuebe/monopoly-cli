@@ -6,10 +6,12 @@ import {
   earnedMoney,
   startingMoney,
   getUserPropertyByProperty,
+  getUserRailroadByRailroad,
   BankruptError,
   ownsGroup,
 } from "./user";
 import { properties, buyProperty } from "./properties";
+import { buyRailroad, railroads } from "./railroads";
 
 describe("createUser", () => {
   it("returns a non bot user", () => {
@@ -50,6 +52,33 @@ describe("getUserPropertyByProperty", () => {
       mortgaged: false,
       houses: 0,
       hotel: false,
+    });
+  });
+});
+
+describe("getUserRailroadByRailroad", () => {
+  it("returns an error", () => {
+    const user = createUser("James");
+    const railroad = railroads[0];
+
+    expect(getUserRailroadByRailroad(user, railroad)).toEqual(
+      new Error("user does not own railroad")
+    );
+  });
+  it("returns a UserRailroad", () => {
+    let user = createUser("James");
+    const railroad = railroads[0];
+    user = buyRailroad(user, railroad);
+
+    expect(getUserRailroadByRailroad(user, railroad)).toEqual({
+      name: "Reading Railroad",
+      slug: "reading_railroad",
+      type: "railroad",
+      order: 0,
+      cost: 200,
+      rentValues: [25, 50, 100, 200],
+      mortgageValue: 100,
+      mortgaged: false,
     });
   });
 });

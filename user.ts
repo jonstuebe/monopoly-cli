@@ -24,7 +24,6 @@ export function getUserPropertyByProperty(
   return userProperty;
 }
 
-// @todo needs-test
 export function getUserRailroadByRailroad(
   user: User,
   railroad: Railroad

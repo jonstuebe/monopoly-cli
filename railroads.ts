@@ -47,12 +47,17 @@ export function buyRailroad(user: User, railroad: Railroad): User {
 // @todo sell to another user
 // export function sellRailroad(sellingUser: User, buyingUser: User): [User, User] {}
 
-// @todo needs-test
 export function unmortgageRailroad(user: User, railroad: Railroad): User {
   throwIfError(canUnmortgageRailroad, user, railroad);
 
+  const userRailroad = throwIfError<UserRailroad>(
+    getUserRailroadByRailroad,
+    user,
+    railroad
+  );
+
   return {
-    ...spendMoney(user, calculateUnmortgage(railroad)),
+    ...spendMoney(user, calculateUnmortgage(userRailroad)),
     railroads: user.railroads.map((p) => {
       if (p.slug === railroad.slug) {
         return {
@@ -66,7 +71,6 @@ export function unmortgageRailroad(user: User, railroad: Railroad): User {
   };
 }
 
-// @todo needs-test
 export function mortgageRailroad(user: User, railroad: Railroad): User {
   throwIfError(canMortgageRailroad, user, railroad);
 
@@ -85,32 +89,34 @@ export function mortgageRailroad(user: User, railroad: Railroad): User {
   };
 }
 
-// @todo needs-test
 export const mortgageInterest = 0.1; // 10% interest
-export function calculateUnmortgage(railroad: Railroad): number {
-  return railroad.mortgageValue * (1 + mortgageInterest);
+export function calculateUnmortgage(userRailroad: UserRailroad): number {
+  return Math.round(userRailroad.mortgageValue * (1 + mortgageInterest));
 }
 
-// @todo needs-test
 export function canUnmortgageRailroad(
   user: User,
   railroad: Railroad
 ): true | Error {
-  const userRailroad = throwIfError<UserRailroad>(
-    getUserRailroadByRailroad,
-    user,
-    railroad
-  );
+  const userRailroad = getUserRailroadByRailroad(user, railroad);
+
+  if (userRailroad instanceof Error) {
+    return userRailroad;
+  }
 
   if (userRailroad.mortgaged === false)
     return new Error("Railroad is not mortgaged");
 
-  throwIfError(canAfford, user, calculateUnmortgage(railroad), "unmortgage");
+  throwIfError(
+    canAfford,
+    user,
+    calculateUnmortgage(userRailroad),
+    "unmortgage"
+  );
 
   return true;
 }
 
-// @todo needs-test
 export function canMortgageRailroad(
   user: User,
   railroad: Railroad
@@ -119,6 +125,10 @@ export function canMortgageRailroad(
 
   if (userRailroad instanceof Error) {
     return userRailroad;
+  }
+
+  if (userRailroad.mortgaged === true) {
+    return new Error("Railroad is already mortgaged");
   }
 
   return true;
